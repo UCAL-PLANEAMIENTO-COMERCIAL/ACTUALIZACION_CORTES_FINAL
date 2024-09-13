@@ -14,7 +14,8 @@ import numpy as np
 import openpyxl
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-
+from pathlib import Path
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 # Set the timezone to Lima
@@ -46,25 +47,24 @@ usuario = "MGARRIDOUCALPRE"
 contrasena = "Admin@24"
 
 print("Deleting old reports...")
-borrar_carpeta('reportes_descarga\\')
+borrar_carpeta(Path('./reportes_descarga/'))
 
 ######## Opciones para descarga de base
 chrome_options = Options()
 chrome_options.add_argument("--disable-extensions")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")  # Linux only
-
+chrome_options.add_argument("--headless")
 # Set a larger window size (replace 1920x1080 with your preferred size)
 chrome_options.add_argument("--window-size=1920,1080")
-current_dir = os.getcwd() + "\\reportes_descarga\\"
+current_dir = str(Path(os.getcwd()+"/reportes_descarga/"))
 prefs = {"download.default_directory": current_dir}
 chrome_options.add_experimental_option("prefs", prefs)
 if not os.path.exists(current_dir):
     os.makedirs(current_dir)
 
 # Path to the ChromeDriver executable
-chrome_driver_path = 'C:\\Users\\TIP\\Desktop\\chromedriver-win64\\chromedriver.exe'
-service = Service(chrome_driver_path)
+service = Service(ChromeDriverManager().install())
 
 ### Abrir Prometei en chrome
 print("Launching browser...")
@@ -153,7 +153,7 @@ driver.quit()
 print("Automation completed successfully!")
  
 
-download_folder = r"C:\Users\TIP\Documents\POYECTO_REPORT\reportes_descarga"
+download_folder = Path("./reportes_descarga/")
 
 # Buscar el archivo Excel en la carpeta de descarga
 def find_excel_file(folder):
@@ -249,7 +249,7 @@ def process_campaign_data2(df, meta_values):
             promesa_pago = df_vendedor[df_vendedor['respuesta_2_nivel'] == 'Con fecha']['id_cliente'].nunique()
             ventas = df_vendedor[df_vendedor['respuesta_2_nivel'] == 'Venta']['id_cliente'].nunique()
             
-            reporte2 = reporte2.append({
+            reporte2 = reporte2._append({
                 'Asesor': vendedor,
                 'COLE/NO COLE': nombre_grupo,
                 'Visita': 0,
@@ -279,64 +279,6 @@ def process_campaign_data2(df, meta_values):
     return reporte2
 reporte2 = process_campaign_data2(campania_25, meta_values_campania25_1)
 #reporte2.reset_index(drop=True, inplace=True)
-"""
-def process_campaign_data(df, meta_values):
-    llamada = df.groupby('vendedor').size().reindex(df['vendedor'].unique(), fill_value=0)
-    Sin_Contacto = df[df['respuesta'] == 'Sin contacto'].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    perdido = df[df['respuesta'] == 'Perdido'].groupby('vendedor').size().reindex(df['vendedor'].unique(), fill_value=0)
-    gestiones_por_vendedor = df.groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    contactos_unicos = df[df['respuesta'] != 'Sin contacto'].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    contactos_efectivos = datos[
-        datos['respuesta_2_nivel'].isin([
-            'Programa visita a campus', 'Desea visita con el coordinador',
-            'Con fecha', 'Costo muy alto - hasta 600', 'Costo muy alto - hasta 800',
-            'Decide por otra institución - Otros', 'Decide por otra institución - Toulouse',
-            'Decide por otra institución - UPC', 'Motivos personales/laborales',
-            'Por distancia', 'Próxima campaña', 'Carrera de interés',
-            'Pendiente decisión de padres', 'Revisión de convalidacion',
-            'Revisión de escala de pago', 'Volver a llamar'
-        ])
-    ].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    valoracion_positivas = datos[
-        datos['respuesta_2_nivel'].isin([
-            'Programa visita a campus', 'Desea visita con el coordinador',
-            'Carrera de interés', 'Pendiente decisión de padres',
-            'Revisión de convalidacion', 'Revisión de escala de pago',
-            'Volver a llamar'
-        ])
-    ].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    promesa_pago = datos[datos['respuesta_2_nivel'] == 'Con fecha'].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-    ventas = datos[datos['vendedor'] == 'dsffs'].groupby('vendedor')['id_cliente'].nunique().reindex(df['vendedor'].unique(), fill_value=0)
-
-    reporte = pd.DataFrame({
-        'Asesor': vendedores_unicos,
-        'Visita': [0] * len(vendedores_unicos),
-        'llamada': llamada.values,
-        'Sin contacto': Sin_Contacto.values,
-        'Perdidos': perdido.values,
-        'Real Gestionados': gestiones_por_vendedor.values,
-        'Meta Gestionados': [meta_values['meta_gestiones']] * len(vendedores_unicos),
-        'Real Contactados': contactos_unicos.values,
-        'Meta Contactados': [meta_values['meta_contactos_unicos']] * len(vendedores_unicos),
-        'Real Contactos Efectivos': contactos_efectivos.values,
-        'Meta Contactos Efectivos': [meta_values['meta_contactos_efectivos']] * len(vendedores_unicos),
-        'Real Valoraciones Positivas': valoracion_positivas.values,
-        'Meta Valoraciones Positivas': [meta_values['meta_valoraciones_positivas']] * len(vendedores_unicos),
-        'Real Promesas de Pago': promesa_pago.values,
-        'Meta Promesas de Pago': [meta_values['meta_promesas_de_pago']] * len(vendedores_unicos),
-        'Real Ventas': ventas.values,
-        'Meta Ventas': [meta_values['meta_ventas']] * len(vendedores_unicos),
-    }).sort_values(by='Real Gestionados', ascending=False)
-    
-    reporte.loc[reporte['Asesor'] == 'Ingrid Guillermo Rivera', 'Meta Gestionados'] = 100
-    
-    
-    reporte = pd.concat([reporte], ignore_index=True)
-    
-    return reporte
-
-reporte = process_campaign_data(campania_24, meta_values_campania24_2)
-""" 
 
 print("Generando el archivo Excel...")
 # Define the path for the final Excel report
@@ -346,61 +288,5 @@ with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
     reporte2.to_excel(writer, sheet_name="Campania_25.1")
 
 print("¡Reporte final generado exitosamente!")
-
-
-"""
-folder_id="1sUf9tDLftR3UaJaZsb2TtCpvH9nHZ0zf"
-
-def delete_existing_file(drive, file_name):
-    # List all files in the drive with the given name
-    file_list = drive.ListFile({'q': f"title='{file_name}' and trashed=false"}).GetList()
-    for file in file_list:
-        if file['title'] == file_name:
-            print(f"Deleting existing file: {file['title']} (ID: {file['id']})")
-            file.Delete()
-            print("File deleted successfully.")
-            return
-    print("No existing file found with the given name.")
-    
-    
-    
-def upload_to_drive(file_path, folder_id):
-    # Autenticación y creación del cliente de Google Drive
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("mycreds.txt")
-
-    if gauth.credentials is None:
-        # Authenticate if they're not there
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        # Refresh them if expired
-        gauth.Refresh()
-    else:
-        # Initialize the saved creds
-        gauth.Authorize()
-
-    # Guardar las credenciales para la próxima vez
-    gauth.SaveCredentialsFile("mycreds.txt")
-    
-    drive = GoogleDrive(gauth)
-    
-    delete_existing_file(drive, os.path.basename(file_path))
-
-    # Crear y cargar el archivo en la carpeta especificada
-    file_name = os.path.basename(file_path)
-    file = drive.CreateFile({'title': file_name, 'parents': [{'id': folder_id}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    
-
-
-# Upload to Google Drive
-upload_to_drive(output_file,folder_id)
-"""
-
-
-
-
-
 
 
