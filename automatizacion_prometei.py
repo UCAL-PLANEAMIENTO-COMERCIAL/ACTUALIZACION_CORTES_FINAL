@@ -1,9 +1,10 @@
+"""
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC """
 import os
 import shutil
 import time
@@ -14,6 +15,8 @@ import numpy as np
 import openpyxl
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+
+"""
 
 # Set the timezone to Lima
 lima_timezone = pytz.timezone('America/Lima')
@@ -44,7 +47,7 @@ usuario = "MGARRIDOUCALPRE"
 contrasena = "Admin@24"
 
 print("Deleting old reports...")
-borrar_carpeta('reportes_descarga\\')
+borrar_carpeta(Path('reportes_descarga\\'))
 
 ######## Opciones para descarga de base
 chrome_options = Options()
@@ -149,10 +152,14 @@ else:
 print("Closing browser...")
 driver.quit()
 print("Automation completed successfully!")
- 
+
+"""
 
 
-download_folder = r"C:\Users\TIP\Documents\POYECTO_REPORT\reportes_descarga"
+
+
+
+download_folder = 'reportes_descarga\\'
 
 # Buscar el archivo Excel en la carpeta de descarga
 def find_excel_file(folder):
@@ -189,22 +196,30 @@ vendedores_unicos2 = datos['vendedor'].unique()
 #vendedores_unicos = campania_24['vendedor'].unique()
 #vendedores_unicos=[vendedor.title() for vendedor in vendedores_unicos]
 """
-meta_values_campania24_2 = {
-    'meta_gestiones': 144,
-    'meta_contactos_unicos': 30,
-    'meta_contactos_efectivos': 24,
-    'meta_valoraciones_positivas': 8,
-    'meta_promesas_de_pago': 1,
-    'meta_ventas': 1
+meta_values_campania24_2 = {          
+JACQUELINE CASTRO CASTRO       
+Angelica Iparraguirre          
+Andrea Araujo Antara           
+Lohana Rivera                   
+                 
+   
+Janira Delgado Salazar
+Cinthia Orosco  
+Rosmery Enriquez 
+Fiorella Lanegra 
+INGRID GUILLERMO RIVERA   
+Stefano Napuri 
+Maria Luque             
 }
 """
+var=1
 meta_values_campania25_1 = {
-    'meta_gestiones': 100,
-    'meta_contactos_unicos': 30,
-    'meta_contactos_efectivos': 24,
-    'meta_valoraciones_positivas': 4,
-    'meta_promesas_de_pago': 1,
-    'meta_ventas': 1
+    'meta_gestiones': 100*var,
+    'meta_contactos_unicos': 30*var,
+    'meta_contactos_efectivos': 24*var,
+    'meta_valoraciones_positivas': 4*var,
+    'meta_promesas_de_pago': 1*var,
+    'meta_ventas': 3*var
 }
 
 # Función para procesar los datos y generar el reporte
@@ -236,7 +251,7 @@ def process_campaign_data2(df, meta_values):
                     'Decide por otra institución - UPC', 'Motivos personales/laborales',
                     'Por distancia', 'Próxima campaña', 'Carrera de interés',
                     'Pendiente decisión de padres', 'Revisión de convalidacion',
-                    'Revisión de escala de pago', 'Volver a llamar','Está ocupado - fecha','Viene a evento','Revisión de propuesta'
+                    'Revisión de escala de pago', 'Volver a llamar','Está ocupado - fecha','Viene a evento','Revisión de propuesta','Revisión de malla curricular'
                 ])
             ]['id_cliente'].nunique()
             valoracion_positivas = df_vendedor[
@@ -247,7 +262,7 @@ def process_campaign_data2(df, meta_values):
             promesa_pago = df_vendedor[df_vendedor['respuesta_2_nivel'] == 'Con fecha']['id_cliente'].nunique()
             ventas = df_vendedor[df_vendedor['respuesta_2_nivel'] == 'Venta']['id_cliente'].nunique()
             
-            reporte2 = reporte2.append({
+            reporte2 = pd.concat([reporte2, pd.DataFrame([{
                 'Asesor': vendedor,
                 'COLE/NO COLE': nombre_grupo,
                 'Visita': 0,
@@ -268,7 +283,7 @@ def process_campaign_data2(df, meta_values):
                 'Meta Ventas': meta_values['meta_ventas'],
                 'COLE': nombre_grupo,
                 'Pool': 'NO COLE' if nombre_grupo == 'COLE' else 'COLE'
-            }, ignore_index=True)
+            }])], ignore_index=True)
     reporte2.loc[reporte2['Asesor'] == 'Maria Luque', 'Asesor'] = 'Maria Paz'
     reporte2.set_index(['Asesor', 'COLE/NO COLE'], inplace=True)
     reporte2.sort_values(by='Real Gestionados', ascending=False)
@@ -395,10 +410,6 @@ def upload_to_drive(file_path, folder_id):
 # Upload to Google Drive
 upload_to_drive(output_file,folder_id)
 """
-
-
-
-
 
 
 
